@@ -35,6 +35,21 @@ but as the examples show you will probably not need to write
 very much code. The examples are usefull as they are and I am
 open to include more if you send me your stuff.
 
+## Build
+
+To build xlscripter I recommend lein.
+Easiest to work with (for this tool, I think) is an uberjar,
+so here is how you produce that.
+
+    $ https://github.com/jramb/xlscripter.git
+    $ cd xlscripter
+    $ lein uberjar
+
+This assembles xlscripter.jar in the target directory.
+You will then only need this jar file to use xlscripter.
+
+For your convenience you can download the jar file [here][https://www.dropbox.com/s/ghsmzu421aw1f2x/xlscripter.jar "xlscripter.jar"].
+
 ## Usage
 
 You will need this:
