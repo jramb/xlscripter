@@ -77,6 +77,11 @@ This transformer converts the spreadsheet into tab-separated text:
 
 More examples are in the example directory.
 
+## Known problems
+  * The transformer needs to be in the classpath. Basically it should be in the same dir where you run the command.
+  * Output needs to go into a file, I would like to be able to send the output to stdout.
+  * Output is hardcoded to ISO-8859
+
 ## License
 
 
