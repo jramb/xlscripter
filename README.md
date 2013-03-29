@@ -70,8 +70,8 @@ This transformer converts the spreadsheet into tab-separated text:
 
     (ns xlscripter.custom)
 
-    (defn process [data & args]
-      (for [r (first data)]
+    (defn process [data args]
+      (doseq [r (first data)]
         (println  (apply str (interpose "\t" r)))))
 
 

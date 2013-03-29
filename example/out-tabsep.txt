@@ -1,0 +1,5 @@
+String	Number	Date
+AAA	123	Fri Mar 29 00:00:00 CET 2013
+BBB	-1	Tue Jan 02 00:00:00 CET 1900	This date will be shown wrong (known Excel bug)
+CCCCCCC		Fri Dec 31 00:00:00 CET 2100
+Jörg	7777	Wed Nov 25 00:00:00 CET 1970

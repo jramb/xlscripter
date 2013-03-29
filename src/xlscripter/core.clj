@@ -4,6 +4,7 @@
   (:use [xlscripter.poi :as poi])
   (:use [xlscripter.custom :as custom])
   (:use [clojure.java.io :as io])
+  (:use [xlscripter.tools :as tools])
   (:gen-class))
 
 
@@ -32,7 +33,7 @@
 (defn -main [& argv]
   (println "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
   (if (< (count argv) 3)
-    (println "*** Expecting args: xlscripter transform.clj data.xls output.file")
+    (println "*** Expecting args: transform.clj data.xls output.txt")
     (do
       (let [[transformer data outfile & args] argv]
         (load-file transformer) ;; defines #'process
@@ -40,6 +41,5 @@
               processed (custom/process all-data args)]
           (with-open [o (io/writer outfile :encoding "ISO8859_1" #_"UTF-8")]
             (binding [*out* o]
-              (dorun (process all-data args))
-              ))))
+              (process all-data args)))))
       (println "Done!"))))

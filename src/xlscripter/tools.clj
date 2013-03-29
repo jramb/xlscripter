@@ -1,6 +1,9 @@
 (ns ^{:doc "Helper functions for xlscripter"
       :author "Jörg Ramb, 2013"}
-  xlscripter.tools)
+  xlscripter.tools
+  ;;(:refer-clojure :exclude [format])
+  (:use [clojure.walk :only [postwalk]])
+  )
 
 ;; Some cool helper functions
 
@@ -47,4 +50,28 @@ where each number is the maximum width of the strings in that column."
               (apply str (apply str (interpose "+" (map fill-char widths))))
               "|"))))
 
+(defn coerce-type [x]
+  (fn [x]
+    (condp instance?
+        clojure.lang.BigInt (biginteger x)
+        clojure.lang.Ratio (double x)
+        java.util.Date     (str x)
+        :else x)))
 
+#_(defn xformat
+  "Like clojure.core/format but arguments passed as seq and with some convenience.
+@see http://docs.oracle.com/javase/1.5.0/docs/api/java/util/Formatter.html"
+  [fmt args]
+  (apply clojure.core/format fmt args))
+
+(defn replace-string [a b o]
+  (if (string? o)
+    (clojure.string/replace o a b)
+    o))
+
+(defn replace-walk
+  "Helper, replaces a with b in the whole structure s."
+  [s a b]
+  (postwalk
+   (partial replace-string a b)
+   s))

@@ -1,0 +1,11 @@
+| Testfile      |                              |                      |
+|---------------+------------------------------+----------------------|
+|               |                              |                      |
+| String        | Hello                        |                      |
+| Number        |                            5 |                      |
+| Formula       | =B4                          | =B3                  |
+| Date          | Thu Mar 28 00:00:00 CET 2013 | Should be 2013-03-28 |
+| Empty         |                              | left cell is empty   |
+| Bool          | false                        | true                 |
+|               |                              |                      |
+| Slut på filen |                              |                      |
