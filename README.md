@@ -1,51 +1,55 @@
 # XLScripter
 
-Sometimes I need to convert data in a spreadsheet file
+Now, this is my itch: Sometimes I need to convert data in a spreadsheet file
 (for example Excel) into some text version. This might be because I need to
 load rows into a database, to convert data to HTML or otherwise produce code from
 data.
 
-Now any spreadsheet program is a wonderfull tool for
-human beings to use, but mostly it is a pain for automated
-tools. The most common work-arounds I used was:
+Spreadsheet programs are wonderful tools for human beings,
+but mostly I think automated tools do not share this affection.
+The Excel-format is not easy to read, not even in the XML-version.
 
-  * export the data to CSV and load that one. That works quite
-     well but is boring to parse. Also it still is manual work to
+The most common work-arounds I used so far were something like this:
+
+  * export the data to CSV and work with the CSV instead. That works quite
+     well but is boring to parse. Also it is still manual work to
      export the file to CVS (and users don't like that format).
   * Create "code" within the spreadsheet with ugly commands like
 
       =CONCATENATE("insert into table xxx values('",A1,"','",B1,"')")
 
-Kind of works, but, it is a manual process (with lots of copy paste).
+This kind of works, but it also is a manual process (with lots of copy paste).
 
 There must be an easier way.
 
-To make (specifically my own) life easier I cast together this
-little tool which allows you to specify a "transformer" script
-(based on Clojure) which you then can use together with *xlscripter*
+To make (specifically my own) life easier I threw together this
+little tool which allows me to use a "transformer" script
+(based on Clojure) which together with *xlscripter* is used
 to convert a spreadsheet file (xls or xlsx format) to some output
-of your like. To read the spreadsheet I use Apache POI.
+as needed. To read the spreadsheet I use Apache POI.
 
 Since the configuration resides in a separate transformer script
 (probably quite short, but with the full power of Clojure at hand)
 you can easily develop and (re)use it for many spreadsheet files.
 
-Well, you need to know enough Clojure to write the transformers,
-but as the examples show you will probably not need to write
-very much code. The examples are usefull as they are and I am
-open to include more if you send me your stuff.
+Even if you do not speak Clojure, the provided "template.clj" transformer
+is quite powerfull on its own, but with a few lines of code you can
+make your own allmighty transformer. Well, you can get quite long with either.
+
+The examples in here are usefull as they are and I am open to include
+more if you send me your stuff.
 
 ## Build
 
-To build xlscripter I recommend lein.
-Easiest to work with (for this tool, I think) is an uberjar,
-so here is how you produce that.
+To build xlscripter I recommend `lein`. The result should (in this case)
+be an uberjar, since I think this makes it easiest to work with xlscripter.
+Here is how you compile xlscripter.jar.
 
     $ git clone https://github.com/jramb/xlscripter.git
     $ cd xlscripter
     $ lein uberjar
 
-This assembles xlscripter.jar in the target directory.
+This assembles xlscripter.jar in the `target` directory.
 You will then only need this jar file to use xlscripter.
 
 For your convenience you can download the jar file here: https://www.dropbox.com/s/ghsmzu421aw1f2x/xlscripter.jar
@@ -53,9 +57,9 @@ For your convenience you can download the jar file here: https://www.dropbox.com
 ## Usage
 
 You will need this:
-  * xlscripter.jar (this)
+  * xlscripter.jar
   * Java (JRE is sufficient)
-  * your transformer.clj (see examples for inspiration)
+  * your transformer-clj (or just the templater.clj, also see examples for inspiration)
   * your input.xls(x)
 
 Then
@@ -63,7 +67,7 @@ Then
     java -jar xlscripter.jar input.xlsx output.txt transformer.clj
 
 produces an output.txt according to the transformer. The transformer might
-take additional parameters following.
+take additional parameters.
 
 ## Example
 
@@ -75,10 +79,18 @@ This transformer `tabsep.clj` converts the spreadsheet into tab-separated text:
       (doseq [r (first data)]
         (println  (apply str (interpose "\t" r)))))
 
+The `data` parameter is actually the whole spreadsheet. It is a
+list of sheets (spreadsheet files can contain many sheets). By using (first data)
+I select only the first sheet, which is mostly sufficient.
+
+Every sheet is a list of rows and every row is a list of cells.
+The cells are normal Clojure data, strings, numbers, Java-Dates. However,
+formulas are presented as strings and *not* evaluated.
+
 ## Templater
 
 Another feature is the predefined "templater.clj" transformer which
-uses a template file as a definition. This is a powerfull too to produce
+uses a template file as a definition. This is a powerful tool to produce
 output by defining a simple template format as an input.
 
 If you have this template file "test.tmpl":
@@ -105,15 +117,44 @@ then calling
 
      java -jar xlscripter.jar data.xlsx output.txt templater.clj
 
-will reproduce the template to the output.
+will produce the output using the template.
+
+### MODIFY
 
 The `--MODIFY--` lines (as many as you like) will modify all input-cells
-before they are produced. The blocks between `--BEGIN_DATA--` and `--END_DATA--` are replaced
+before they are produced. Technically the thing after the colon is evaluated
+and expected to return a function that takes one parameter and returns the same
+value, possibly modified. (Note: `replace-string` is a predefined function that
+returns(!) just such a function. It sounds more complicated than it is.)
+
+The list of MODIFY functions is chained together and applied to every(!) cell.
+
+### BEGIN_DATA/END_DATA
+
+The blocks between `--BEGIN_DATA--` and `--END_DATA--` are replaced
 with the given row-ranges (1 being the first row in the sheet).
-The text between BEGIN_DATA and END_DATA is formatted using the formatter codes
-as used in java.util.Formatter (which was inspired by C's `printf`).
+The text between BEGIN_DATA and END_DATA is used as formatting template, it
+uses the formatter codes as described in java.util.Formatter
+(which was inspired by C's `printf`).
+
+A formatting string could be as simple as
+
+    %s, %s, %s, %s
+
+which would output the first four columns as (s)trings.
+Other usefull codes are `%d` for decimals, `%tf` for date.
+
+To specify a specific column you can write `1$`, `2$` etc. after the `%`,
+for example
+
+    %3$s, %2$s, %1$s, %4$s
+
+Note that you must use this notation for the complete formatting part
+(all placeholders) if you decide to use it.
 
 You can have several BEGIN_DATA/END_DATA blocks.
+
+### More
 
 More examples are in the example directory.
 
