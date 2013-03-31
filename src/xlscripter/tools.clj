@@ -64,14 +64,42 @@ where each number is the maximum width of the strings in that column."
   [fmt args]
   (apply clojure.core/format fmt args))
 
-(defn replace-string [a b o]
-  (if (string? o)
-    (clojure.string/replace o a b)
-    o))
+(defn replace-string [a b]
+  (fn [o]
+    (if (string? o)
+      (clojure.string/replace o a b)
+      o)))
 
-(defn replace-walk
-  "Helper, replaces a with b in the whole structure s."
-  [s a b]
-  (postwalk
-   (partial replace-string a b)
-   s))
+(defn parse-int [s default]
+  (try (bigint s)
+       (catch NumberFormatException e default)
+       (catch NullPointerException e default)))
+
+(defn templater
+  "The data is processed using the template file.
+   The template file format is best understood by looking at the example."
+  [data template]
+  (let [rows        (first data)         ;only the first sheet
+        tmpl        (slurp template) ;template file
+        parts       (clojure.string/split tmpl #"(?m)^--END_DATA--$")
+        ;; this is quite cool: find all MODIFY-commands (which must be fn-s that
+        ;; return its only parameter, possibly modified), reads, evals and
+        ;; comp(oses) them to ONE function and postwalks this funktion on the whole sheet 
+        modifier    (apply comp ; note the nice default: (comp) = identity :-)
+                           (for [[_ d] (re-seq #"(?m)^--MODIFY:(.*)--$" tmpl)]
+                             (binding [*ns* (find-ns 'xlscripter.tools)]
+                               (eval (read-string d)))))
+        ;; modify all values according to it
+        rows        (postwalk modifier rows)]
+    (doseq [p (drop-last parts)]
+      (doseq [[_ pre s e fmt] (re-seq #"(?sxm)(.*).*^--BEGIN_DATA(?::\[(\d*)-(\d*)\])?--$.(.*)" p)]
+        (let [s (dec (parse-int s 0))
+              e (dec (parse-int e 1e20))]
+          (print pre)
+          (doseq [[n r] (map vector (range) rows) :when (<= s n e)]
+            (print
+             (try
+               (apply format fmt r)
+               (catch Exception e (str "***ERROR ROW " (inc n) "***\n" e ":\n" fmt (prn-str r) "\n^^^ERROR^^^\n"))))))))
+    (println (last parts))))
+

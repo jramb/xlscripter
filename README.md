@@ -60,13 +60,14 @@ You will need this:
 
 Then
 
-    java -jar xlscripter.jar transformer.clj input.xlsx output.txt
+    java -jar xlscripter.jar input.xlsx output.txt transformer.clj
 
-produces an output.txt according to the transformer.
+produces an output.txt according to the transformer. The transformer might
+take additional parameters following.
 
 ## Example
 
-This transformer converts the spreadsheet into tab-separated text:
+This transformer `tabsep.clj` converts the spreadsheet into tab-separated text:
 
     (ns xlscripter.custom)
 
@@ -74,16 +75,57 @@ This transformer converts the spreadsheet into tab-separated text:
       (doseq [r (first data)]
         (println  (apply str (interpose "\t" r)))))
 
+## Templater
+
+Another feature is the predefined "templater.clj" transformer which
+uses a template file as a definition. This is a powerfull too to produce
+output by defining a simple template format as an input.
+
+If you have this template file "test.tmpl":
+
+    Hello, before1
+    --MODIFY:(replace-string "'" "''")--
+    --MODIFY:(replace-string "Jörg" "Anton")--
+    --BEGIN_DATA:[2-3]--
+    Block1: '%s'
+    --END_DATA--
+    between 1
+    between 2
+    --BEGIN_DATA:[2-]--
+    Block2: %3$tF
+            '%1s' %2$d
+    --END_DATA--
+    also between 3
+    --BEGIN_DATA--
+      Block 3: '%s', %d, %tF
+    --END_DATA--
+    this is the last line.
+
+then calling
+
+     java -jar xlscripter.jar data.xlsx output.txt templater.clj
+
+will reproduce the template to the output.
+
+The `--MODIFY--` lines (as many as you like) will modify all input-cells
+before they are produced. The blocks between `--BEGIN_DATA--` and `--END_DATA--` are replaced
+with the given row-ranges (1 being the first row in the sheet).
+The text between BEGIN_DATA and END_DATA is formatted using the formatter codes
+as used in java.util.Formatter (which was inspired by C's `printf`).
+
+You can have several BEGIN_DATA/END_DATA blocks.
 
 More examples are in the example directory.
 
+
 ## Known problems
   * The transformer needs to be in the classpath. Basically it should be in the same dir where you run the command.
+    I would like to rewrite that part completely.
   * Output needs to go into a file, I would like to be able to send the output to stdout.
-  * Output is hardcoded to ISO-8859
+  * Output is hardcoded to ISO-8859, should be configurable.
+  * Formulas are not calculated. This will probably never change.
 
 ## License
-
 
 Copyright © 2013
 

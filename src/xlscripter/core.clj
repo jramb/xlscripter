@@ -33,9 +33,9 @@
 (defn -main [& argv]
   (println "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
   (if (< (count argv) 3)
-    (println "*** Expecting args: transform.clj data.xls output.txt")
+    (println "*** Expecting args: data.xls output.txt transform.clj [optional-args]")
     (do
-      (let [[transformer data outfile & args] argv]
+      (let [[data outfile transformer & args] argv]
         (load-file transformer) ;; defines #'process
         (let [all-data (get-all-data data)
               processed (custom/process all-data args)]

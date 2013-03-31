@@ -1,31 +1,38 @@
-declare
-  -- well, you COULD just produce insert statements below,
-  -- but this way we have more control.
-  procedure load
-    (p_str in varchar2,
-     p_num in number,
-     p_date in date)
-  is
-    r my_table%rowtype;
-  begin
-    r.str_col := p_str;
-    r.num_col := p_num;
-    r.date_col := p_date;
-    r.creation_date := sysdate;
-    insert into my_table values r;
-  end;
-begin
--- now comes the data part
--- the template i in the unspeakable (but powerful) format
--- described in http://docs.oracle.com/javase/1.5.0/docs/api/java/util/Formatter.html
--- Note that the literal % must be written %%
+Hello, before1
+--MODIFY:(replace-string "'" "''")--
+--MODIFY:(replace-string "Jörg" "Anton")--
+Block1: 'AAA'
+Block1: 'BBB'
 
-load('AAA', 123, to_date('2013-03-29','YYYY-MM-DD'));
-load('CCCCCCC', null, to_date('2100-12-31','YYYY-MM-DD'));
-load('Jörg', 7777, to_date('1970-11-25','YYYY-MM-DD'));
-load('That''s odd', 0, to_date('2013-01-01','YYYY-MM-DD'));
+between 1
+between 2
+Block2: 2013-03-29
+        'AAA' 123
+Block2: 1900-01-02
+        'BBB' -1
+Block2: 2100-12-31
+        'CCCCCCC' null
+Block2: 1970-11-25
+        'Anton' 7777
+Block2: 2013-01-01
+        'That''s odd' 0
 
-end;
 
-rollback; -- eventually you will want to write "commit;" here
+also between 3
+
+***ERROR ROW 1***
+java.util.IllegalFormatConversionException: d != java.lang.String:
+  Block 3: '%s', %d, %tF
+("String" "Number" "Date")
+
+^^^ERROR^^^
+  Block 3: 'AAA', 123, 2013-03-29
+  Block 3: 'BBB', -1, 1900-01-02
+  Block 3: 'CCCCCCC', null, 2100-12-31
+  Block 3: 'Anton', 7777, 1970-11-25
+  Block 3: 'That''s odd', 0, 2013-01-01
+
+
+this is the last line.
+
 

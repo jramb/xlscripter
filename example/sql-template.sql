@@ -19,8 +19,14 @@ begin
 -- the template i in the unspeakable (but powerful) format
 -- described in http://docs.oracle.com/javase/1.5.0/docs/api/java/util/Formatter.html
 -- Note that the literal % must be written %%
---BEGIN_DATA--
-load('%s', %d, to_date('%tF','YYYY-MM-DD'));
+-- Positional notation helps to select columns (%3$s selects the third argument (column))
+--MODIFY:(replace-string "'" "''")--
+--BEGIN_DATA:[2-2]--
+load('%1$s', %2$d, to_date('%3$tF','YYYY-MM-DD'));
+--END_DATA--
+--new section, just to show off
+--BEGIN_DATA:[3-]--
+load('%1$s', %2$d, to_date('%3$tF','YYYY-MM-DD'));
 --END_DATA--
 end;
 

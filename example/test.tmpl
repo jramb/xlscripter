@@ -1,0 +1,21 @@
+Hello, before1
+--MODIFY:(replace-string "'" "''")--
+--MODIFY:(replace-string "Jörg" "Anton")--
+--BEGIN_DATA:[2-3]--
+Block1: '%s'
+--END_DATA--
+between 1
+between 2
+--BEGIN_DATA:[2-]--
+Block2: %3$tF
+        '%1s' %2$d
+--END_DATA--
+
+also between 3
+
+--BEGIN_DATA--
+  Block 3: '%s', %d, %tF
+--END_DATA--
+
+this is the last line.
+
