@@ -1,6 +1,6 @@
 (ns xlscripter.custom
-  (:use [xlscripter.tools :as t])
+  (:use [xlscripter.transformer :as trans])
   (:use [clojure.walk :only [postwalk]]))
 
 (defn process [data args]
-  (t/templater data (first args)))
+  (xlscripter.transformer/templater data (first args)))

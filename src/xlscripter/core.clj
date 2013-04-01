@@ -4,6 +4,7 @@
   (:use [xlscripter.poi :as poi])
   (:use [xlscripter.custom :as custom])
   (:use [clojure.java.io :as io])
+  (:use [xlscripter.transformer :as trans])
   (:use [xlscripter.tools :as tools])
   (:gen-class))
 
@@ -30,16 +31,34 @@
       (str (apply str (interpose "\t" r)) "\r\n")))
   )
 
+(defn evals-fn? [s]
+  (try
+    (fn? (eval s))
+    (catch RuntimeException e false)))
+
+(defn resolve-transformer [t]
+  (let [sym (read-string t)]
+    (cond
+     (= sym :emacs)     xlscripter.transformer/emacs-table
+     (= sym :tabsep)    xlscripter.transformer/tabsep
+     (= sym :template)  xlscripter.transformer/templater
+     (evals-fn? sym)    (eval sym)
+     ;; or the old way (not recommended any more)
+     :else              (do
+                          (load-file t) ;; defines #'process
+                          xlscripter.custom/process))))
+
 (defn -main [& argv]
   (println "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
   (if (< (count argv) 3)
-    (println "*** Expecting args: data.xls output.txt transform.clj [optional-args]")
+    (println "*** Expecting args: data.xls output.txt [:keyword|function|transform.clj] [optional-args]")
     (do
-      (let [[data outfile transformer & args] argv]
-        (load-file transformer) ;; defines #'process
+      (let [[data outfile transformer & args] argv
+            transform (resolve-transformer transformer)]
         (let [all-data (get-all-data data)
-              processed (custom/process all-data args)]
+              ;processed (transform all-data args)
+              ]
           (with-open [o (io/writer outfile :encoding "ISO8859_1" #_"UTF-8")]
             (binding [*out* o]
-              (process all-data args)))))
+              (transform all-data args)))))
       (println "Done!"))))

@@ -39,6 +39,10 @@ make your own allmighty transformer. Well, you can get quite long with either.
 The examples in here are usefull as they are and I am open to include
 more if you send me your stuff.
 
+Of course you could have a processor that mainly have other side-effects
+than outputing text, it's up to you.
+
+
 ## Build
 
 To build xlscripter I recommend `lein`. The result should (in this case)
@@ -69,7 +73,26 @@ Then
 produces an output.txt according to the transformer. The transformer might
 take additional parameters.
 
-## Example
+## Examples
+
+    java -jar xlscripter.jar input.xlsx output.txt :tabsep
+    java -jar xlscripter.jar input.xlsx output.txt :emacs
+    java -jar xlscripter.jar input.xlsx output.txt :template template.tmpl
+  
+
+### Details
+
+For the predefined transformers you can use the ":keyword" shortcuts:
+  * `:emacs` Convert to Emacs table
+  * `:tabsep` Convert to a tab-separated file
+  * `:template <template-file>` Use the template-file to produce a custom output.
+
+For little more control instead of using the predefined transformers you can
+name a fully qualified clojure function.
+as the transformer parameter, e.g. `xlscripter.transformer/tabsep`.
+
+Last not least you can simply point to a clojure file that defines the
+transformer, e.g. `example/tabsep.clj`.
 
 This transformer `tabsep.clj` converts the spreadsheet into tab-separated text:
 
