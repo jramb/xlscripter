@@ -65,8 +65,16 @@ where each number is the maximum width of the strings in that column."
       (clojure.string/replace o a b)
       o)))
 
+(defn dates-to-iso-string [d]
+  (if (instance? java.util.Date d)
+    (clojure.string/replace (format "%tF %<tR" d)" 00:00" "")
+    d))
+
 (defn parse-int [s default]
   (try (bigint s)
        (catch NumberFormatException e default)
        (catch NullPointerException e default)))
 
+(defn stderr [& args]
+  (binding [*out* *err*]
+    (apply println args)))

@@ -68,22 +68,24 @@ You will need this:
 
 Then
 
-    java -jar xlscripter.jar input.xlsx output.txt transformer.clj
+    java -jar xlscripter.jar input.xlsx -o output.txt -t transformer.clj
 
 produces an output.txt according to the transformer. The transformer might
 take additional parameters.
 
 ## Examples
 
-    java -jar xlscripter.jar input.xlsx output.txt :tabsep
-    java -jar xlscripter.jar input.xlsx output.txt :emacs
-    java -jar xlscripter.jar input.xlsx output.txt :template template.tmpl
+    java -jar xlscripter.jar input.xlsx -o output.txt -t :tabsep
+    java -jar xlscripter.jar input.xlsx -t :emacs
+      (outputs to stdout)
+    java -jar xlscripter.jar input.xlsx -o output.txt -t :template template.tmpl
   
 
 ### Details
 
-For the predefined transformers you can use the ":keyword" shortcuts:
-  * `:emacs` Convert to Emacs table
+The transformer is specified by the `-t` parameter.
+For the predefined transformers you can use the ":keyword" shortcuts as value:
+  * `:emacs`  Convert to Emacs table
   * `:tabsep` Convert to a tab-separated file
   * `:template <template-file>` Use the template-file to produce a custom output.
 
@@ -94,7 +96,8 @@ as the transformer parameter, e.g. `xlscripter.transformer/tabsep`.
 Last not least you can simply point to a clojure file that defines the
 transformer, e.g. `example/tabsep.clj`.
 
-This transformer `tabsep.clj` converts the spreadsheet into tab-separated text:
+For example: This transformer `tabsep.clj` converts the spreadsheet into tab-separated text
+(same as `:tabsep`):
 
     (ns xlscripter.custom)
 
@@ -102,21 +105,22 @@ This transformer `tabsep.clj` converts the spreadsheet into tab-separated text:
       (doseq [r (first data)]
         (println  (apply str (interpose "\t" r)))))
 
+The `process` function, which *is* the tranformer, deserves some explanation:
 The `data` parameter is actually the whole spreadsheet. It is a
-list of sheets (spreadsheet files can contain many sheets). By using (first data)
-I select only the first sheet, which is mostly sufficient.
+list of sheets (spreadsheet files can contain many sheets). Here, by using `(first data)`
+we select only the first sheet, which is mostly sufficient.
 
-Every sheet is a list of rows and every row is a list of cells.
+Every sheet is a *list of rows* and every row is a *list of cells*.
 The cells are normal Clojure data, strings, numbers, Java-Dates. However,
 formulas are presented as strings and *not* evaluated.
 
 ## Templater
 
-Another feature is the predefined "templater.clj" transformer which
+Another feature is the predefined `:template` transformer which
 uses a template file as a definition. This is a powerful tool to produce
 output by defining a simple template format as an input.
 
-If you have this template file "test.tmpl":
+If you have this template file `test.tmpl`:
 
     Hello, before1
     --MODIFY:(replace-string "'" "''")--
@@ -138,7 +142,7 @@ If you have this template file "test.tmpl":
 
 then calling
 
-     java -jar xlscripter.jar data.xlsx output.txt templater.clj
+     java -jar xlscripter.jar data.xlsx -t :template test.tmpl
 
 will produce the output using the template.
 
@@ -183,10 +187,6 @@ More examples are in the example directory.
 
 
 ## Known problems
-  * The transformer needs to be in the classpath. Basically it should be in the same dir where you run the command.
-    I would like to rewrite that part completely.
-  * Output needs to go into a file, I would like to be able to send the output to stdout.
-  * Output is hardcoded to ISO-8859, should be configurable.
   * Formulas are not calculated. This will probably never change.
 
 ## License

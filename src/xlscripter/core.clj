@@ -5,7 +5,8 @@
   (:use [xlscripter.custom :as custom])
   (:use [clojure.java.io :as io])
   (:use [xlscripter.transformer :as trans])
-  (:use [xlscripter.tools :as tools])
+  (:use [xlscripter.tools :as t])
+  (:use [clojure.tools.cli :only [cli]])
   (:gen-class))
 
 
@@ -36,6 +37,17 @@
     (fn? (eval s))
     (catch RuntimeException e false)))
 
+;; this is just play, ignore
+(defn ᐰ [s] ;; C-x 8 <RET> 1430
+  (apply str (reverse s)))
+(defn ∞ []   ;; C-x 8 <RET> infinity
+  (range))
+(defn λ [x] x)
+(def ҈ cycle)
+(def ߋ comp)
+;; resume serious programming, now
+
+
 (defn resolve-transformer [t]
   (let [sym (read-string t)]
     (cond
@@ -48,17 +60,42 @@
                           (load-file t) ;; defines #'process
                           xlscripter.custom/process))))
 
+
 (defn -main [& argv]
-  (println "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
-  (if (< (count argv) 3)
-    (println "*** Expecting args: data.xls output.txt [:keyword|function|transform.clj] [optional-args]")
-    (do
-      (let [[data outfile transformer & args] argv
-            transform (resolve-transformer transformer)]
-        (let [all-data (get-all-data data)
-              ;processed (transform all-data args)
-              ]
-          (with-open [o (io/writer outfile :encoding "ISO8859_1" #_"UTF-8")]
-            (binding [*out* o]
-              (transform all-data args)))))
-      (println "Done!"))))
+  (let [props (System/getProperties)
+        [options args banner]  (cli argv
+                                    ["-o" "--output" "Output to file, default is stdout" :default "-"]
+                                    ["-h" "--help" "Show help" :default false :flag true]
+                                    ["-t" "--transformer" ":keyword or function or tranformer.clj" :default ":emacs"]
+                                    )]
+    (t/stderr "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
+    (t/stderr (format  "file.encoding=%s, line.separator=%s"
+                          (get props "file.encoding")
+                          (pr-str (get props "line.separator"))))
+    (if (or (:help options) (< (count args) 1))
+      (do                               ; show parameters
+        (t/stderr "\n*** Expected args: data.xls [optional-args]")
+        (t/stderr banner)
+        (t/stderr "Usually you will want to specify both the input file and the transformer.
+Popular transformers:
+  :tabsep               Outputs the first sheet as tab-separated values
+  :emacs                Outputs the first sheet as an Emacs org-mode table.
+  :template <tpl-file>  Uses the tpl-file as a template for the output.
+
+The output uses your systems default line endings and Javas default encoding (UTF-8).
+To change encoding, run this by specifying -Dfile.encoding=\"ISO-8859-1\" as java-parameter,
+for example like this:
+    java -Dfile.encoding='ISO-8859-1' -jar xlscripter.jar sominput.xlsx :tabsep
+"))
+      (do                               ; do your thing!
+        (let [[xlsfile & args] args
+              transform (resolve-transformer (:transformer options))]
+          (let [all-data (get-all-data xlsfile)]
+            (if (= (:output options) "-")
+              (transform all-data args)
+              (with-open [o (io/writer (:output options) ;:encoding "ISO-8859-1"
+                                       )]
+                (binding [*out* o]
+                  (transform all-data args)
+                  (flush))))
+            (flush)))))))
