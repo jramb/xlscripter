@@ -2,12 +2,13 @@
       :author "Jörg Ramb, 2013"}
   xlscripter.transformer
   ;;(:refer-clojure :exclude [format])
-  (:use [xlscripter.tools :as t])
+  (:require [xlscripter.tools :as t])
+  (:require [clojure.string :as s])
   (:use [clojure.walk :only [postwalk]]))
 
 
 (defn localize-line-seps [s]
-  (clojure.string/replace s #"[\n\r]+" (System/getProperty "line.separator")))
+  (s/replace s #"\r?\n" (System/getProperty "line.separator")))
 
 
 (defn templater
@@ -20,21 +21,22 @@
             rows        (first data)        ;only the first sheet
             tmpl        (localize-line-seps
                          (slurp template))  ;template file
-            parts       (clojure.string/split tmpl #"(?m)^--END_DATA--$")
+            parts       (s/split tmpl #"(?m)^--END_DATA--$")
             ;; this is quite cool: find all MODIFY-commands (which must be fn-s that
             ;; return its only parameter, possibly modified), reads, evals and
             ;; comp(oses) them to ONE function and postwalks this funktion on the whole sheet 
             modifier    (apply comp ; note the nice default: (comp) = identity :-)
-                               (for [[_ d] (re-seq #"(?m)^--MODIFY:(.*)--$" tmpl)]
+                               (for [[_ d] (reverse (re-seq #"(?m)^--MODIFY:(.*)--$" tmpl))]
                                  (binding [*ns* (find-ns 'xlscripter.tools)]
                                    (eval (read-string d)))))
             ;; modify all values according to it
             rows        (postwalk modifier rows)]
         (doseq [p (drop-last parts)]
-          (doseq [[_ pre s e fmt] (re-seq #"(?sxm)(.*).*^--BEGIN_DATA(?::\[(\d*)-(\d*)\])?--$.(.*)" p)]
-            (let [s (dec (parse-int s 0))
-                  e (dec (parse-int e 1e20))]
-              (print pre)
+          (doseq [[_ pre s e fmt] (re-seq #"(?sxm)(.*).*^--BEGIN_DATA(?::\[(\d*)-(\d*)\])?--(.*)" p)]
+            (let [fmt  (s/trim-newline fmt)
+                  s (dec (t/parse-int s 0))
+                  e (dec (t/parse-int e 1e20))]
+              (println pre)
               (doseq [[n r] (map vector (range) rows) :when (<= s n e)]
                 (print
                  (try

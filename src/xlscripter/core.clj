@@ -1,11 +1,11 @@
 (ns ^{:doc "XLS(X) -> text scriptable converter"
       :author "Jörg Ramb, 2013"}
   xlscripter.core
-  (:use [xlscripter.poi :as poi])
-  (:use [xlscripter.custom :as custom])
-  (:use [clojure.java.io :as io])
-  (:use [xlscripter.transformer :as trans])
-  (:use [xlscripter.tools :as t])
+  (:require [xlscripter.poi :as poi])
+  (:require [xlscripter.custom :as custom])
+  (:require [clojure.java.io :as io])
+  (:require [xlscripter.transformer :as trans])
+  (:require [xlscripter.tools :as t])
   (:use [clojure.tools.cli :only [cli]])
   (:gen-class))
 
@@ -37,14 +37,15 @@
     (fn? (eval s))
     (catch RuntimeException e false)))
 
-;; this is just play, ignore
-(defn ᐰ [s] ;; C-x 8 <RET> 1430
-  (apply str (reverse s)))
-(defn ∞ []   ;; C-x 8 <RET> infinity
-  (range))
-(defn λ [x] x)
-(def ҈ cycle)
-(def ߋ comp)
+(comment
+  ;; this is just play, ignore
+  (defn ᐰ [s] ;; C-x 8 <RET> 1430
+    (apply str (reverse s)))
+  (defn ∞ []   ;; C-x 8 <RET> infinity
+    (range))
+  (defn λ [x] x)
+  (def ҈ cycle)
+  (def ߋ comp))
 ;; resume serious programming, now
 
 
@@ -64,15 +65,20 @@
 (defn -main [& argv]
   (let [props (System/getProperties)
         [options args banner]  (cli argv
-                                    ["-o" "--output" "Output to file, default is stdout" :default "-"]
+                                    ["-o" "--output" "Output to file" #_:default #_"-"]
                                     ["-h" "--help" "Show help" :default false :flag true]
                                     ["-t" "--transformer" ":keyword or function or tranformer.clj" :default ":emacs"]
-                                    )]
+                                    ["-e" "--encoding"    "encoding to be used for output" :default "UTF-8"]
+                                    )
+        [xlsfile & args] args]
     (t/stderr "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
-    (t/stderr (format  "file.encoding=%s, line.separator=%s"
-                          (get props "file.encoding")
-                          (pr-str (get props "line.separator"))))
-    (if (or (:help options) (< (count args) 1))
+    (t/stderr (format  "line.separator=%s, encoding=%s, transformer=%s %s"
+                       (pr-str (get props "line.separator"))
+                       #_(get props "file.encoding")
+                       (:encoding options)
+                       (:transformer options)
+                       (apply str (interpose " " args))))
+    (if (or (:help options) (not xlsfile) (not (:output options)))
       (do                               ; show parameters
         (t/stderr "\n*** Expected args: data.xls [optional-args]")
         (t/stderr banner)
@@ -81,20 +87,14 @@ Popular transformers:
   :tabsep               Outputs the first sheet as tab-separated values
   :emacs                Outputs the first sheet as an Emacs org-mode table.
   :template <tpl-file>  Uses the tpl-file as a template for the output.
-
-The output uses your systems default line endings and Javas default encoding (UTF-8).
-To change encoding, run this by specifying -Dfile.encoding=\"ISO-8859-1\" as java-parameter,
-for example like this:
-    java -Dfile.encoding='ISO-8859-1' -jar xlscripter.jar sominput.xlsx :tabsep
-"))
+" #_"Implemented encodinds (can be selected with the '-e' option):\n"
+                  #_(.values (java.nio.charset.Charset/availableCharsets))))
       (do                               ; do your thing!
-        (let [[xlsfile & args] args
-              transform (resolve-transformer (:transformer options))]
+        (let [transform (resolve-transformer (:transformer options))]
           (let [all-data (get-all-data xlsfile)]
             (if (= (:output options) "-")
-              (transform all-data args)
-              (with-open [o (io/writer (:output options) ;:encoding "ISO-8859-1"
-                                       )]
+              (transform all-data args)   ;BAD performance. Cache?
+              (with-open [o (io/writer (:output options) :encoding (:encoding options))]
                 (binding [*out* o]
                   (transform all-data args)
                   (flush))))

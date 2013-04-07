@@ -16,7 +16,7 @@ The most common work-arounds I used so far were something like this:
      export the file to CVS (and users don't like that format).
   * Create "code" within the spreadsheet with ugly commands like
 
-      =CONCATENATE("insert into table xxx values('",A1,"','",B1,"')")
+        =CONCATENATE("insert into table xxx values('",A1,"','",B1,"')")
 
 This kind of works, but it also is a manual process (with lots of copy paste).
 
@@ -76,9 +76,9 @@ take additional parameters.
 ## Examples
 
     java -jar xlscripter.jar input.xlsx -o output.txt -t :tabsep
-    java -jar xlscripter.jar input.xlsx -t :emacs
-      (outputs to stdout)
+    java -jar xlscripter.jar input.xlsx -o output.txt -t :emacs
     java -jar xlscripter.jar input.xlsx -o output.txt -t :template template.tmpl
+    java -jar xlscripter.jar input.xlsx -o output-iso.txt -t :tabsep -e iso-8859-1
   
 
 ### Details
