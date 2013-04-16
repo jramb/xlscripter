@@ -53,7 +53,7 @@
 
 (defn emacs-table [data args]
   (let [sheet (postwalk t/dates-to-iso-string (first data)) ;only use first sheet
-        sheet (t/make-square-vec sheet)
+        sheet (t/make-rectangle-vec sheet)
         widths (t/max-widths sheet)
         [header & data] sheet]
     (t/prtab-row header widths)

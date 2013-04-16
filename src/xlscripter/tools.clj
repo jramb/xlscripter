@@ -7,7 +7,7 @@
 
 ;; Some cool helper functions
 
-(defn make-square-vec [tab2d]
+(defn make-rectangle-vec [tab2d]
   (let [maxcol (apply max (map count tab2d))]
     (vec (map
           #(into (vec %) (repeat (- maxcol (count %)) nil))

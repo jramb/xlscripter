@@ -6,7 +6,7 @@
 ;; rest by a divider row.
 (defn process [data args]
   (let [sheet (first data)             ;only use first sheet
-        sheet (t/make-square-vec sheet)
+        sheet (t/make-rectangle-vec sheet)
         widths (t/max-widths sheet)
         [header & data] sheet]
     (t/prtab-row header widths)
