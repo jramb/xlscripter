@@ -65,12 +65,14 @@
 (defn -main [& argv]
   (let [props (System/getProperties)
         [options args banner]  (cli argv
+                                    ["-i" "--input" "xlsx or xls file to read"]
                                     ["-o" "--output" "Output to file" #_:default #_"-"]
                                     ["-h" "--help" "Show help" :default false :flag true]
                                     ["-t" "--transformer" ":keyword or function or tranformer.clj" :default ":emacs"]
                                     ["-e" "--encoding"    "encoding to be used for output" :default "UTF-8"]
                                     )
-        [xlsfile & args] args]
+        ;;[xlsfile & args] args
+        xlsfile (:input options)]
     (t/stderr "xlscripter by J.Ramb, https://github.com/jramb/xlscripter")
     (t/stderr (format  "line.separator=%s, encoding=%s, transformer=%s %s"
                        (pr-str (get props "line.separator"))

@@ -68,17 +68,17 @@ You will need this:
 
 Then
 
-    java -jar xlscripter.jar input.xlsx -o output.txt -t transformer.clj
+    java -jar xlscripter.jar -i input.xlsx -o output.txt -t transformer.clj
 
 produces an output.txt according to the transformer. The transformer might
 take additional parameters.
 
 ## Examples
 
-    java -jar xlscripter.jar input.xlsx -o output.txt -t :tabsep
-    java -jar xlscripter.jar input.xlsx -o output.txt -t :emacs
-    java -jar xlscripter.jar input.xlsx -o output.txt -t :template template.tmpl
-    java -jar xlscripter.jar input.xlsx -o output-iso.txt -t :tabsep -e iso-8859-1
+    java -jar xlscripter.jar -i input.xlsx -o output.txt -t :tabsep
+    java -jar xlscripter.jar -i input.xlsx -o output.txt -t :emacs
+    java -jar xlscripter.jar -i input.xlsx -o output.txt -t :template template.tmpl
+    java -jar xlscripter.jar -i input.xlsx -o output-iso.txt -t :tabsep -e iso-8859-1
   
 
 ### Details
