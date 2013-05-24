@@ -189,6 +189,11 @@ More examples are in the example directory.
 ## Known problems
   * Formulas are not calculated. This will probably never change.
 
+## Planned features
+  * New built-in: Convert to SQLite
+  * New built-in: Convert to XML
+  * Maybe: new built-in: convert to generic SQL (create-table and inserts)
+
 ## License
 
 Copyright © 2013
