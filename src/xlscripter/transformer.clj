@@ -40,7 +40,8 @@
               (doseq [[n r] (map vector (range) rows) :when (<= s n e)]
                 (print
                  (try
-                   (apply format fmt r)
+                   (apply format fmt (concat (map #(or % "") r) ;; need to append empty cols, since String/format fails if there too few parameters
+                                             (repeat 100 "")))
                    (catch Exception e (str "***ERROR ROW " (inc n) "***\n" e ":\n" fmt (prn-str r) "\n^^^ERROR^^^\n"))))))))
         (print (last parts)))
       (t/stderr "Oh, you MUST specify a template! Run with -h for some more info."))))

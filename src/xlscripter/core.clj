@@ -89,7 +89,7 @@ Popular transformers:
   :tabsep               Outputs the first sheet as tab-separated values
   :emacs                Outputs the first sheet as an Emacs org-mode table.
   :template <tpl-file>  Uses the tpl-file as a template for the output.
-" #_"Implemented encodinds (can be selected with the '-e' option):\n"
+" #_"Implemented encodings (can be selected with the '-e' option):\n"
                   #_(.values (java.nio.charset.Charset/availableCharsets))))
       (do                               ; do your thing!
         (let [transform (resolve-transformer (:transformer options))]
