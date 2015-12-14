@@ -56,7 +56,7 @@ Here is how you compile xlscripter.jar.
 This assembles xlscripter.jar in the `target` directory.
 You will then only need this jar file to use xlscripter.
 
-For your convenience you can download the jar file here: https://www.dropbox.com/s/ghsmzu421aw1f2x/xlscripter.jar
+For your convenience you can download the jar file here: https://dl.dropboxusercontent.com/u/7679659/xlscripter.jar
 
 ## Usage
 
