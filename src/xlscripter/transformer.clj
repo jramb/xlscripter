@@ -4,6 +4,7 @@
   ;;(:refer-clojure :exclude [format])
   (:require [xlscripter.tools :as t])
   (:require [clojure.string :as s])
+  (:require [clojure.java.jdbc :as sql])
   (:use [clojure.walk :only [postwalk]]))
 
 
@@ -61,3 +62,55 @@
     (t/prtab-divider widths)
     (doseq [r data]
       (t/prtab-row r widths))))
+
+
+(def db-spec
+ { :classname   "org.sqlite.JDBC"
+   :subprotocol "sqlite"
+   :subname     "disk.sqlite" ; on disk
+   ;:subname     ":memory:" ; in-memory 
+   } 
+  )
+
+;(defmacro with-sqlite
+    ;;; old version
+  ;[& body]
+  ;;; (:serialized @db-connection)...?
+  ;`(if true ;(get-in @all-config [:db :serialized])
+     ;(locking db-connection               ;FIXME
+       ;(sql/with-db-connection @db-connection
+         ;(sql/transaction ~@body)))
+     ;(sql/with-db-connection @db-connection
+       ;(sql/transaction ~@body))))
+
+(defn sqlite-out [data args]
+  (let [db-file (first args)
+        db-spec (assoc db-spec :subname (or db-file "xslscripter.db")) ]
+    (sql/with-db-connection [db-con db-spec]
+      (dorun
+        (for [sheet data]
+          (let [tab-name "sheet"]
+            (sql/db-do-commands
+              db-con
+              false ; no need for a transaction
+              (str
+                "create table if not exists "
+                tab-name
+                "( id varchar2(32) not null, "
+                (apply str (for [n (range 5)]
+                             (format "c%03d varchar2," n)))
+                " primary key (id));"
+                ))
+         (sql/with-db-transaction [trx db-con]
+            (sql/insert!
+              trx
+              (keyword tab-name) ; :scaletest
+              (into {:id 1}
+                    (for [% (range 5)]
+                      [(keyword (format "c%03d" %))
+                       (format "myseed_%03d,%3d" 1 %)
+                       ])))) 
+            ;(sql/db-do-commands
+            ;db-con false
+            ;(format "create index scaletest_n%03d on scaletest ( item_%03d );" c c))
+          ))))))

@@ -55,6 +55,7 @@
      (= sym :emacs)     xlscripter.transformer/emacs-table
      (= sym :tabsep)    xlscripter.transformer/tabsep
      (= sym :template)  xlscripter.transformer/templater
+     (= sym :sqlite)    xlscripter.transformer/sqlite-out
      (evals-fn? sym)    (eval sym)
      ;; or the old way (not recommended any more)
      :else              (do
