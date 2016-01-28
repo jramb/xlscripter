@@ -63,8 +63,8 @@ For your convenience you can download the jar file here: https://www.dropbox.com
 You will need this:
   * xlscripter.jar
   * Java (JRE is sufficient)
-  * your transformer-clj (or just the templater.clj, also see examples for inspiration)
   * your input.xls(x)
+  * optional: your transformer-clj (or just the templater.clj, also see examples for inspiration)
 
 Then
 
@@ -73,11 +73,16 @@ Then
 produces an output.txt according to the transformer. The transformer might
 take additional parameters.
 
+Now also includes a transformer to SQLite.
+With one command you can transform a spreadsheet into a SQLite database.
+Every sheet in the input spreadsheet becomes an own table.
+
 ## Examples
 
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :tabsep
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :emacs
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :template template.tmpl
+    java -jar xlscripter.jar -i input.xlsx -o output.txt -t :sqlite output.db
     java -jar xlscripter.jar -i input.xlsx -o output-iso.txt -t :tabsep -e iso-8859-1
   
 

@@ -83,34 +83,46 @@
      ;(sql/with-db-connection @db-connection
        ;(sql/transaction ~@body))))
 
+(defn numbered-list [seq]
+  (map (fn [a b] [a b]) seq (iterate inc 1)))
+
 (defn sqlite-out [data args]
   (let [db-file (first args)
         db-spec (assoc db-spec :subname (or db-file "xslscripter.db")) ]
     (sql/with-db-connection [db-con db-spec]
       (dorun
-        (for [sheet data]
-          (let [tab-name "sheet"]
+        (for [[sheet sheet-num] (numbered-list data)]
+          (let [clean-sheet (postwalk t/dates-to-iso-string sheet) ;only use first sheet
+                clean-sheet (t/make-rectangle-vec clean-sheet)
+                widths (t/max-widths clean-sheet)
+                width (count widths) ]
+          (let [tab-name (str "sheet" sheet-num)] #_(.getSheetName sheet)
+            (sql/db-do-commands
+              db-con
+              false
+              (str "drop table if exists " tab-name))
             (sql/db-do-commands
               db-con
               false ; no need for a transaction
               (str
                 "create table if not exists "
                 tab-name
-                "( id varchar2(32) not null, "
-                (apply str (for [n (range 5)]
-                             (format "c%03d varchar2," n)))
+                "(id varchar2(32) not null, "
+                (apply str (for [n (range width)]
+                             (format "c%d varchar2," (inc n))))
                 " primary key (id));"
                 ))
          (sql/with-db-transaction [trx db-con]
+           (doseq [[row i] (numbered-list clean-sheet)]
             (sql/insert!
               trx
               (keyword tab-name) ; :scaletest
-              (into {:id 1}
-                    (for [% (range 5)]
-                      [(keyword (format "c%03d" %))
-                       (format "myseed_%03d,%3d" 1 %)
-                       ])))) 
+              (into {:id i}
+                    (for [[c n] (numbered-list row)]
+                      [(keyword (format "c%d" n))
+                       c ;(format "myseed_%3d,%3d" 1 %)
+                       ]))))) 
             ;(sql/db-do-commands
             ;db-con false
             ;(format "create index scaletest_n%03d on scaletest ( item_%03d );" c c))
-          ))))))
+          )))))))

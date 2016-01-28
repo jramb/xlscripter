@@ -83,15 +83,16 @@
                        (apply str (interpose " " args))))
     (if (or (:help options) (not xlsfile) (not (:output options)))
       (do                               ; show parameters
-        (t/stderr "\n*** Expected args: data.xls [optional-args]")
+        (t/stderr "\n*** Expected args: -i data.xls -o output-file -t transformer [optional-args]")
         (t/stderr banner)
         (t/stderr "Usually you will want to specify both the input file and the transformer.
 Popular transformers:
-  :tabsep               Outputs the first sheet as tab-separated values
-  :emacs                Outputs the first sheet as an Emacs org-mode table.
-  :template <tpl-file>  Uses the tpl-file as a template for the output.
-" #_"Implemented encodings (can be selected with the '-e' option):\n"
-                  #_(.values (java.nio.charset.Charset/availableCharsets))))
+  :tabsep                 Outputs the first sheet as tab-separated values
+  :emacs                  Outputs the first sheet as an Emacs org-mode table.
+  :template <tpl-file>    Uses the tpl-file as a template for the output.
+  :sqlite   <sqlite.db>   Exports everything into an sqlite database
+" "Implemented encodings (can be selected with the '-e' option):\n"
+            (str (.values (java.nio.charset.Charset/availableCharsets)))))
       (do                               ; do your thing!
         (let [transform (resolve-transformer (:transformer options))]
           (let [all-data (get-all-data xlsfile)]
