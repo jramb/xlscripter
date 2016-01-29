@@ -83,6 +83,12 @@
      ;(sql/with-db-connection @db-connection
        ;(sql/transaction ~@body))))
 
+(defn index-to-column-name [i]
+  (let [q (quot i 26)
+        i (rem i 26)]
+  (str (when (> q 0) (index-to-column-name (dec q)))
+       (char (+ i (int \A))))))
+
 (defn numbered-list [seq]
   (map (fn [a b] [a b]) seq (iterate inc 1)))
 
@@ -101,25 +107,34 @@
               db-con
               false
               (str "drop table if exists " tab-name))
+            (println (str
+                "create table if not exists "
+                tab-name
+                "(rownum int not null, "
+                (apply str (for [n (range width)]
+                             (index-to-column-name n)))
+                " primary key (rownum));"
+                ))
             (sql/db-do-commands
               db-con
               false ; no need for a transaction
               (str
                 "create table if not exists "
                 tab-name
-                "(id varchar2(32) not null, "
+                "(rownum varchar2(32) not null, "
                 (apply str (for [n (range width)]
-                             (format "c%d varchar2," (inc n))))
-                " primary key (id));"
+                             (str (index-to-column-name n)
+                                  " text,")))
+                " primary key (rownum));"
                 ))
          (sql/with-db-transaction [trx db-con]
            (doseq [[row i] (numbered-list clean-sheet)]
             (sql/insert!
               trx
               (keyword tab-name) ; :scaletest
-              (into {:id i}
+              (into {:rownum i}
                     (for [[c n] (numbered-list row)]
-                      [(keyword (format "c%d" n))
+                      [(keyword (index-to-column-name (dec n)))
                        c ;(format "myseed_%3d,%3d" 1 %)
                        ]))))) 
             ;(sql/db-do-commands
