@@ -141,3 +141,14 @@ library of its own."
     (for [n (range 0 (.getLastCellNum row))]
       (.getCell row n))))
 
+(defn all-sheet-data [sheet]
+    (for [row (all-rows sheet)]
+      (for [cell (all-cells row)]
+        (get-cell-value cell)))  )
+
+(defn all-wb-data
+  "Lazily(!) returns all wb data (list of list of list of cell values"
+  [wb]
+  (for [sheet (all-sheets wb)]
+    (all-sheet-data sheet)))
+

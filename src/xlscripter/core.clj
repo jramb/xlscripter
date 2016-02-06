@@ -1,5 +1,5 @@
-(ns ^{:doc "XLS(X) -> text scriptable converter"
-      :author "Jörg Ramb, 2013"}
+(ns ^{:doc "XLS(X) scriptable converter"
+      :author "Jörg Ramb, 2013,15,16"}
   xlscripter.core
   (:require [xlscripter.poi :as poi])
   (:require [xlscripter.custom :as custom])
@@ -10,16 +10,14 @@
   (:gen-class))
 
 
-(defn get-all-data [data-file]
-  (poi/with-excel-read [wb data-file]
-    ;; hmmm, need to fetch all into memory (i e make un-lazy)
-    ;; because the file will be closed after this?
-    (doall (for [sheet (poi/all-sheets wb)]
-      (doall (for [row (poi/all-rows sheet)]
-        (doall (for [cell (poi/all-cells row)]
-          (poi/get-cell-value cell)))))))))
-
-
+;(defn get-all-data [data-file]
+  ;(poi/with-excel-read [wb data-file]
+    ;;; hmmm, need to fetch all into memory (i e make un-lazy)
+    ;;; because the file will be closed after this?
+    ;(doall (for [sheet (poi/all-sheets wb)]
+      ;(doall (for [row (poi/all-rows sheet)]
+        ;(doall (for [cell (poi/all-cells row)]
+          ;(poi/get-cell-value cell)))))))))
 
 
 (comment ; Example transformer: tabsep.clj
@@ -92,11 +90,13 @@ Popular transformers:
             (str (.values (java.nio.charset.Charset/availableCharsets)))))
       (do                               ; do your thing!
         (let [transform (resolve-transformer (:transformer options))]
-          (let [all-data (get-all-data xlsfile)]
-            (if (= (:output options) "-")
-              (transform all-data args options)   ;BAD performance. Cache?
-              (with-open [o (io/writer (:output options) :encoding (:encoding options))]
-                (binding [*out* o]
-                  (transform all-data args options)
-                  (flush))))
+          ;let [all-data (get-all-data xlsfile)] ; this prefetched everything
+          (poi/with-excel-read [wb xlsfile]; keeps the Excel open and delivers everything lazy
+            (let [all-data (poi/all-wb-data wb)]
+              (if (= (:output options) "-")
+                (transform all-data args options)   ;BAD performance. Cache?
+                (with-open [o (io/writer (:output options) :encoding (:encoding options))]
+                  (binding [*out* o]
+                    (transform all-data args options)
+                    (flush)))))
             (flush)))))))
