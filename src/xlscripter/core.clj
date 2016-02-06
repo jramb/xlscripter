@@ -12,15 +12,12 @@
 
 (defn get-all-data [data-file]
   (poi/with-excel-read [wb data-file]
-    ;; unsure: need to fetch all into memory (i e make un-lazy)
+    ;; hmmm, need to fetch all into memory (i e make un-lazy)
     ;; because the file will be closed after this?
-    ;;(doall)
-    (for [sheet (poi/all-sheets wb)]
-      ;;(doall)
-      (for [row (poi/all-rows sheet)]
-        ;;(doall)
-        (for [cell (poi/all-cells row)]
-          (poi/get-cell-value cell))))))
+    (doall (for [sheet (poi/all-sheets wb)]
+      (doall (for [row (poi/all-rows sheet)]
+        (doall (for [cell (poi/all-cells row)]
+          (poi/get-cell-value cell)))))))))
 
 
 
@@ -67,9 +64,9 @@
   (let [props (System/getProperties)
         [options args banner]  (cli argv
                                     ["-i" "--input" "xlsx or xls file to read"]
-                                    ["-o" "--output" "Output to file" #_:default #_"-"]
+                                    ["-o" "--output" "Output to file" :default "-"]
                                     ["-h" "--help" "Show help" :default false :flag true]
-                                    ["-t" "--transformer" ":keyword or function or tranformer.clj" :default ":emacs"]
+                                    ["-t" "--transformer" ":keyword or function or tranformer.clj" :default ":sqlite"]
                                     ["-e" "--encoding"    "encoding to be used for output" :default "UTF-8"]
                                     )
         ;;[xlsfile & args] args
@@ -97,9 +94,9 @@ Popular transformers:
         (let [transform (resolve-transformer (:transformer options))]
           (let [all-data (get-all-data xlsfile)]
             (if (= (:output options) "-")
-              (transform all-data args)   ;BAD performance. Cache?
+              (transform all-data args options)   ;BAD performance. Cache?
               (with-open [o (io/writer (:output options) :encoding (:encoding options))]
                 (binding [*out* o]
-                  (transform all-data args)
+                  (transform all-data args options)
                   (flush))))
             (flush)))))))

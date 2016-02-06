@@ -21,6 +21,11 @@ where each number is the maximum width of the strings in that column."
   (reduce #(map max %1 %2)
           (map #(map (comp count str) %) list-of-lists)))
 
+(defn max-num-cols
+  "Just calculate the maximum number of columns of a 2d string array"
+  [list-of-lists]
+  (reduce max (map #(count %) list-of-lists)))
+
 
 (comment
   (max-widths [["hej" "h" "halllo"]
@@ -38,17 +43,22 @@ where each number is the maximum width of the strings in that column."
 
 (defn prtab-row
   [r widths]
-  (println "|"
-           (apply str (interpose " | " (map padded r widths)))
-           "|"))
+  (print "|")
+  (doseq [e (interpose " | " (map padded r widths))]
+    (print e))
+  (println "|"))
 
 (defn prtab-divider
   [widths]
   (let [fill-char (fn [n] (apply str (repeat (+ n 2) \-)))]
-    (println (str
-              "|"
-              (apply str (apply str (interpose "+" (map fill-char widths))))
-              "|"))))
+    (print "|")
+    (doseq [e (interpose "+" (map fill-char widths))]
+      (print e))
+    (println "|")
+    #_(println (str
+                 "|"
+                 (apply str (apply str (interpose "+" (map fill-char widths))))
+                 "|"))))
 
 (defn coerce-type [x]
   (fn [x]

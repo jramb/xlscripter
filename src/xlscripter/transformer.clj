@@ -5,7 +5,7 @@
   (:require [xlscripter.tools :as t])
   (:require [clojure.string :as s])
   (:require [clojure.java.jdbc :as sql])
-  (:use [clojure.walk :only [postwalk]]))
+  (:use [clojure.walk :only [walk prewalk postwalk]]))
 
 
 (defn localize-line-seps [s]
@@ -15,7 +15,7 @@
 (defn templater
   "The data is processed using the template file.
    The template file format is best understood by looking at the example."
-  [data args]
+  [data args options]
   (let [template (first args)]
     (if template
       (let [template    (first args)
@@ -48,17 +48,20 @@
       (t/stderr "Oh, you MUST specify a template! Run with -h for some more info."))))
 
 
-(defn tabsep [data args]
+(defn tabsep [data args options]
   (doseq [r (first data)] ;; only use the first sheet
-    (println  (apply str (interpose "\t" r)))))
+    (println  (s/join str (interpose "\t" r)))))
 
 
-(defn emacs-table [data args]
-  (let [sheet (postwalk t/dates-to-iso-string (first data)) ;only use first sheet
+(defn emacs-table [data args options]
+  (let [sheet (walk t/dates-to-iso-string identity (first data)) ;only use first sheet
         sheet (t/make-rectangle-vec sheet)
         widths (t/max-widths sheet)
         [header & data] sheet]
+    (println "DEBUGGING!" (count header))
     (t/prtab-row header widths)
+    (println "DEBUGGING 2!")
+    (System/exit 0)
     (t/prtab-divider widths)
     (doseq [r data]
       (t/prtab-row r widths))))
@@ -92,29 +95,29 @@
 (defn numbered-list [seq]
   (map (fn [a b] [a b]) seq (iterate inc 1)))
 
-(defn sqlite-out [data args]
+(defn strip-extension [filename]
+  (let [dot (.lastIndexOf filename ".")]
+    (if (> dot 0)
+      (.substring filename 0 dot)
+      filename)))
+
+(defn sqlite-out [data args options]
   (let [db-file (first args)
+        input (:input options)
+        db-file (or db-file (str (strip-extension input) ".db"))
         db-spec (assoc db-spec :subname (or db-file "xslscripter.db")) ]
+    (println "Loading" input "=>" db-file)
     (sql/with-db-connection [db-con db-spec]
-      (dorun
-        (for [[sheet sheet-num] (numbered-list data)]
-          (let [clean-sheet (postwalk t/dates-to-iso-string sheet) ;only use first sheet
-                clean-sheet (t/make-rectangle-vec clean-sheet)
-                widths (t/max-widths clean-sheet)
-                width (count widths) ]
+      (doseq [[sheet sheet-num] (numbered-list data)]
+        ;(println "Sheet nr " sheet-num)
+        (let [clean-sheet (walk t/dates-to-iso-string identity sheet)
+              width (t/max-num-cols clean-sheet)
+              ]
           (let [tab-name (str "sheet" sheet-num)] #_(.getSheetName sheet)
             (sql/db-do-commands
               db-con
               false
               (str "drop table if exists " tab-name))
-            (println (str
-                "create table if not exists "
-                tab-name
-                "(rownum int not null, "
-                (apply str (for [n (range width)]
-                             (index-to-column-name n)))
-                " primary key (rownum));"
-                ))
             (sql/db-do-commands
               db-con
               false ; no need for a transaction
@@ -122,22 +125,21 @@
                 "create table if not exists "
                 tab-name
                 "(rownum varchar2(32) not null, "
-                (apply str (for [n (range width)]
-                             (str (index-to-column-name n)
-                                  " text,")))
-                " primary key (rownum));"
+                (s/join "," (for [n (range width)]
+                             (str (index-to-column-name n) " text")))
+                ", primary key (rownum));"
                 ))
-         (sql/with-db-transaction [trx db-con]
-           (doseq [[row i] (numbered-list clean-sheet)]
-            (sql/insert!
-              trx
-              (keyword tab-name) ; :scaletest
-              (into {:rownum i}
-                    (for [[c n] (numbered-list row)]
-                      [(keyword (index-to-column-name (dec n)))
-                       c ;(format "myseed_%3d,%3d" 1 %)
-                       ]))))) 
+            (sql/with-db-transaction [trx db-con]
+              (doseq [[row i] (numbered-list clean-sheet)]
+                (sql/insert!
+                  trx
+                  (keyword tab-name) ; :scaletest
+                  (into {:rownum i}
+                        (for [[c n] (numbered-list row)]
+                          [(keyword (index-to-column-name (dec n)))
+                           c
+                           ]))))) 
             ;(sql/db-do-commands
             ;db-con false
             ;(format "create index scaletest_n%03d on scaletest ( item_%03d );" c c))
-          )))))))
+            ))))))
