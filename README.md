@@ -1,5 +1,12 @@
 # XLScripter
 
+Ready-to-run solution to convert spreadsheet files (Microsoft Office Excel)
+into SQLite databases, scripts or any text format. Very easy to use, works in
+any environment which has a JVM.
+
+
+## Details
+
 Now, this is my itch: Sometimes I need to convert data in a spreadsheet file
 (for example Excel) into some text version. This might be because I need to
 load rows into a database, to convert data to HTML or otherwise produce code from
@@ -74,15 +81,15 @@ produces an output.txt according to the transformer. The transformer might
 take additional parameters.
 
 Now also includes a transformer to SQLite.
-With one command you can transform a spreadsheet into a SQLite database.
-Every sheet in the input spreadsheet becomes an own table.
+With one command you can transform a spreadsheet into a SQLite databaser!
+Every sheet in the input spreadsheet becomes a table.
 
 ## Examples
 
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :tabsep
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :emacs
     java -jar xlscripter.jar -i input.xlsx -o output.txt -t :template template.tmpl
-    java -jar xlscripter.jar -i input.xlsx -o output.txt -t :sqlite output.db
+    java -jar xlscripter.jar -i input.xlsx -t :sqlite output.db
     java -jar xlscripter.jar -i input.xlsx -o output-iso.txt -t :tabsep -e iso-8859-1
   
 
@@ -195,16 +202,15 @@ More examples are in the example directory.
   * Formulas are not calculated. This will probably never change.
 
 ## Planned features
-  * New built-in: Convert to SQLite
-  * New built-in: Convert to XML
-  * Maybe: new built-in: convert to generic SQL (create-table and inserts)
+  * Maybe: New built-in: Convert to XML (needed?)
+  * Very maybe: new built-in: convert to generic SQL (create-table and inserts)
 
 ## License
 
-Copyright © 2013
+Created 2013, extended 2015 and 2016
 
 Distributed under the Eclipse Public License, the same as Clojure.
 
 This does not apply to the used libraries themselves, they have their own
-licenses, see Apache POI, http://poi.apache.org/
+licenses, see Clojure, SQLite and Apache POI, http://poi.apache.org/
 
